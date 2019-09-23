@@ -588,3 +588,7 @@
 /venv/lib/python3.7/site-packages/pymongo/uri_parser.py
 /venv/lib/python3.7/site-packages/pymongo-3.9.0.dist-info/WHEEL
 /venv/lib/python3.7/site-packages/pymongo/write_concern.py
+/venv/
+/.env
+/scrapy.cfg
+/.idea/mongoSettings.xml
