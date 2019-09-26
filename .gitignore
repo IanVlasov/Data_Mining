@@ -590,3 +590,5 @@
 /venv/lib/python3.7/site-packages/pymongo/write_concern.py
 /venv/
 /vacancy.sqlite
+/.env
+/.idea/mongoSettings.xml
