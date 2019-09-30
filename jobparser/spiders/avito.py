@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from scrapy.http import HtmlResponse
-from jobparser.items import JobparserItem
+from jobparser.items import AvitoJobsItem
+from scrapy.loader import ItemLoader
 
 
 class AvitoSpider(scrapy.Spider):
@@ -21,23 +22,19 @@ class AvitoSpider(scrapy.Spider):
 
     @staticmethod
     def parse_vacancy(response: HtmlResponse):
-        name = \
-            response.xpath('//div[@class="item-view-content"]//span[@class="title-info-title-text"]/text()').extract_first()
+        loader = ItemLoader(item=AvitoJobsItem(), response=response)
 
-        url = response.url
+        loader.add_xpath('name',
+                         '//div[@class="item-view-content"]//span[@class="title-info-title-text"]/text()')
 
-        _tmp_cur = {'₽': 'RUB', '$': 'USD'}
-        min_salary_str = \
-            response.xpath(
-                '//div[@class="item-view-content-right"]//span[@class="price-value-string js-price-value-string"]'
-                '/span[@class="js-item-price"]/@content').extract_first()
-        salary = {
-            'currency': response.xpath('//div[@class="item-view-content-right"]//span[@itemprop="priceCurrency"]'
-                                       '/@content').extract_first(),
-            'min_value': int(min_salary_str) if min_salary_str else None
-                  }
+        loader.add_value('url', response.url)
 
-        employer = response.xpath('//div[@class="seller-info-name js-seller-info-name"]/a/text()').extract_first().strip()
-        employer_url = response.xpath('//div[@class="seller-info-name js-seller-info-name"]/a/@href').extract_first()
+        loader.add_xpath('salary',
+                         '//span[@class="price-value-string js-price-value-string"]//@content')
 
-        yield JobparserItem(name=name, url=url, salary=salary, employer=employer, employer_url=employer_url)
+        loader.add_xpath('employer',
+                         '//div[@class="seller-info-name js-seller-info-name"]/a/text()')
+        loader.add_xpath('employer_url',
+                         '//div[@class="seller-info-name js-seller-info-name"]/a/@href')
+
+        yield loader.load_item()

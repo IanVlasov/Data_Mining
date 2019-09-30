@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from scrapy.http import HtmlResponse
-from jobparser.items import JobparserItem
-
+from scrapy.loader import ItemLoader
+from jobparser.items import HHItem
 
 class HhruSpider(scrapy.Spider):
     name = 'hhru'
@@ -19,15 +19,15 @@ class HhruSpider(scrapy.Spider):
         for vacancy in vacancies_on_page:
             yield response.follow(vacancy, callback=self.vacancy_parse)
 
-    def vacancy_parse(self, response: HtmlResponse):
-        name = response.css('div.vacancy-title h1.header::text').extract_first()
-        url = response.url
-        min_salary = response.css('div.vacancy-title meta[itemprop=minValue]::attr(content)').extract_first()
-        max_salary = response.css('div.vacancy-title meta[itemprop=maxValue]::attr(content)').extract_first()
-        employer = response.css('div.vacancy-company span[itemprop=name]::text').extract_first()
-        employer_url = f'hh.ru' \
-                       f'{response.css("div.vacancy-company a[itemprop=hiringOrganization]::attr(href)").extract_first()}'
+    @staticmethod
+    def vacancy_parse(response: HtmlResponse):
+        loader = ItemLoader(item=HHItem(), response=response)
+        loader.add_css('name', 'div.vacancy-title h1.header::text')
+        loader.add_value('url', response.url)
+        loader.add_css('min_salary', 'div.vacancy-title meta[itemprop=minValue]::attr(content)')
+        loader.add_css('max_salary', 'div.vacancy-title meta[itemprop=maxValue]::attr(content)')
+        loader.add_css('employer', 'div.vacancy-company span[itemprop=name]::text')
+        loader.add_css('employer_url', "div.vacancy-company a[itemprop=hiringOrganization]::attr(href)")
 
-        yield JobparserItem(name=name, url=url, min_salary=min_salary, max_salary=max_salary, employer=employer,
-                            employer_url=employer_url)
+        yield loader.load_item()
 
